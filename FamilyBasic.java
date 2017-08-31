@@ -66,10 +66,10 @@ class StageMap {
 		for(int y=0;y<20;y++){
 			for(int x=0;x<25;x++){
 				if(map[y*25+x] == 1){
-					int fx = (x - 2) * 16;
+					int fx = x * 16;
 					int fy = 16 * 8 - y * 16;
-					if( fx - 4 <= mx && mx <= fx + 36 ) {
-						if ( fy - 16 < my && my <= fy ) {
+					if( fx - 16 <= mx && mx <= fx + 16 ) {
+						if ( fy - 32 <= my && my <= fy ) {
 							return fy;
 						}
 					}
@@ -100,7 +100,7 @@ class FireBall {
 			fg = 0;
 		}
 		if(key_fire == 1) {
-			fy = my + 24;
+			fy = my + 16;
 			fg = 0;
 			ft = 0;
 			if ( md == 0 ) {
@@ -197,7 +197,7 @@ class FBImage extends JPanel implements Runnable {
 	double imageHeight = image.getHeight() - 16;
 	double dstX1=(fbx) * panelWidth / 400;
 	double dstX2=dstX1 + (panelWidth / 25);
-	double dstY1=fby - 16;
+	double dstY1=fby;
 	double dstY2=dstY1 + (panelHeight / 20);
 	int x=0;
 	int y=0;
@@ -259,15 +259,11 @@ class FBImage extends JPanel implements Runnable {
 		ma = 3;
 		mw = 0;
 	}
-	if(mx <= -8) mx = 400;
-	if(mx >= 408) mx = -4;
 	// 床から落ちる処理
 	if(sm.onFloor(mx,my) == -1 && fj == false) {
-		jxv = 0;
+		jxv = 4;
 		if(key_left == 1) {
 			jxv=-4;
-		} else if(key_right == 1) {
-			jxv=4;
 		}
 		jyv = 0;
 		fj = true;
@@ -277,8 +273,8 @@ class FBImage extends JPanel implements Runnable {
 	// 空中にいる時
 	if(fj) {
 		mx = mx + jxv;
-		if(mx <= -8) mx = 400;
-		if(mx >= 408) mx = -4;
+		if(mx < 0) mx = 400;
+		if(mx > 400) mx = 0;
 		my = my + jyv - (int)(mw * mw * g);
 		int jv = jyv - (int)(mw * mw * g);
 		int h = sm.onFloor(mx,my);
@@ -309,6 +305,8 @@ class FBImage extends JPanel implements Runnable {
 		if(ma == 3){ ma = 1; }
 		mario_move = true;
 	}
+	if(mx < 0) mx = 400;
+	if(mx > 400) mx = 0;
     }
 
     @Override
@@ -362,7 +360,7 @@ class FBImage extends JPanel implements Runnable {
 //	    dstY1 = dstY2;
 //	}
 	// ファイアボールの描画
-	fireBall(g2D, fb.fx, (int)( -fb.fy * panelHeight / 320 + (panelHeight / 7) * 3), fb.ft);
+	fireBall(g2D, fb.fx, (int)( ( 16 * 7 -fb.fy ) * panelHeight / 320), fb.ft);
    }
 };
 
