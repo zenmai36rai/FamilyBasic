@@ -12,10 +12,74 @@ import java.awt.Container;
 import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import java.awt.Color;
 
 import java.awt.*;
 import java.awt.event.*;
 
+class StageMap {
+	public StageMap() {
+		map = new int[] {
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+		1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,
+		1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,
+		1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,
+		1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+		0 };
+	}
+	public void drawMap(Graphics g, double panelWidth, double panelHeight) {
+		double imageWidth = 400;
+		double imageHeight = 320;
+		g.setColor(Color.black);
+		g.fillRect( (int)0,(int)0,(int)panelWidth,(int)panelHeight);
+		for(int y=0;y<20;y++){
+			for(int x=0;x<25;x++){
+				if(map[y*25+x] == 1){
+					int dstX1 = (int)( x * 16 * panelWidth / imageWidth);
+					int dstY1 = (int)( y * 16 * panelHeight / imageHeight);
+					int dstX2 = (int)( 16 * panelWidth / imageWidth);
+					int dstY2 = (int)( 16 * panelHeight / imageHeight);
+					g.setColor(Color.blue);
+					g.fillRect( (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2);
+					g.setColor(Color.cyan);
+					g.drawRect( (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2);
+				}
+			}
+		}
+	}
+	public int onFloor(int mx, int my) {
+		for(int y=0;y<20;y++){
+			for(int x=0;x<25;x++){
+				if(map[y*25+x] == 1){
+					int fx = (x - 2) * 16;
+					int fy = 16 * 8 - y * 16;
+					if( fx - 4 <= mx && mx <= fx + 36 ) {
+						if ( fy - 16 < my && my <= fy ) {
+							return fy;
+						}
+					}
+				}
+			}
+		}
+		return -1;
+	}
+	public int map[];
+}
 class FireBall {
 	public FireBall() {
 		fx = 400;
@@ -23,14 +87,16 @@ class FireBall {
 		ft = 0;
 		ff = 3;
 	}
-	public void moveFireBall(int mx, int my, int md, int key_fire, int key_left, int key_right) {
+	public void moveFireBall(StageMap sm, int mx, int my, int md, int key_fire, int key_left, int key_right) {
 		double g = 0.0625;
 		ft++;
 		fg++;
 		fx = fx + fxv;
 		fy = fy + ff - (int)(fg * fg * g);
-		if( fy <= 8 ) {
-			fy = 8;
+		int fv = ff - (int)(fg * fg * g);
+		int h = sm.onFloor(fx,fy);
+		if( (fv <= 0) && (h != -1) ) {
+			fy = h;
 			fg = 0;
 		}
 		if(key_fire == 1) {
@@ -68,6 +134,7 @@ class FBImage extends JPanel implements Runnable {
     private int key_right;
     private int key_jump;
     private int key_fire;
+    private StageMap sm;
     private int mx; // マリオの位置
     private int my; // マリオの位置
     private int md; // マリオの向き
@@ -75,6 +142,7 @@ class FBImage extends JPanel implements Runnable {
     private int ma; // マリオのアニメ
     private boolean fj; // ジャンプフラグ
     private int jxv;
+    private int jyv;
     private FireBall fb;
     private boolean mario_move;
     private int peach_position[];
@@ -108,12 +176,12 @@ class FBImage extends JPanel implements Runnable {
     }
 
     public void buffCopy(Graphics2D g2D, int dstX1,int dstY1,int dstX2,int dstY2,int x,int y, boolean lr){
-		double imageWidth = image.getWidth() - 16;
-		double imageHeight = image.getHeight() - 16;
-		int srcX1 = x * (int)(imageWidth / 8) + 8;
-		int srcY1 = y * (int)(imageHeight / 7) + 8;
-		int srcX2 = (x+1) * (int)(imageWidth / 8) + 3;
-		int srcY2 = (y+1) * (int)(imageHeight / 7) + 3;
+		double imageWidth = image.getWidth();
+		double imageHeight = image.getHeight();
+		int srcX1 = 12 + x * (32 + 16);
+		int srcY1 = 12 + y * (32 + 10);
+		int srcX2 = srcX1+32;
+		int srcY2 = srcY1+32;
 		// スケーリング
 		if( lr == false ) {
 		    g2D.drawImage(image, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX1,srcY1,srcX2,srcY2, this);
@@ -129,7 +197,7 @@ class FBImage extends JPanel implements Runnable {
 	double imageHeight = image.getHeight() - 16;
 	double dstX1=(fbx) * panelWidth / 400;
 	double dstX2=dstX1 + (panelWidth / 25);
-	double dstY1=fby;
+	double dstY1=fby - 16;
 	double dstY2=dstY1 + (panelHeight / 20);
 	int x=0;
 	int y=0;
@@ -158,6 +226,7 @@ class FBImage extends JPanel implements Runnable {
     	peach_timer = 0;
 	peach_position = new int[240];
 	fb = new FireBall();
+	sm = new StageMap();
 	game_loop = new Thread(this);
 	game_loop.start();
     }
@@ -176,7 +245,7 @@ class FBImage extends JPanel implements Runnable {
 
     public void moveCommand() {
 	double g = 0.0625;
-	fb.moveFireBall(mx,my,md,key_fire,key_left,key_right);
+	fb.moveFireBall(sm,mx,my,md,key_fire,key_left,key_right);
 	mario_move = false;
 	if(key_jump == 1 && fj == false) {
 		jxv = 0;
@@ -185,17 +254,37 @@ class FBImage extends JPanel implements Runnable {
 		} else if(key_right == 1) {
 			jxv=4;
 		}
+		jyv = 9;
 		fj = true;
 		ma = 3;
 		mw = 0;
-		my = 0;
 	}
+	if(mx <= -8) mx = 400;
+	if(mx >= 408) mx = -4;
+	// 床から落ちる処理
+	if(sm.onFloor(mx,my) == -1 && fj == false) {
+		jxv = 0;
+		if(key_left == 1) {
+			jxv=-4;
+		} else if(key_right == 1) {
+			jxv=4;
+		}
+		jyv = 0;
+		fj = true;
+		ma = 3;
+		mw = 0;
+	}
+	// 空中にいる時
 	if(fj) {
 		mx = mx + jxv;
-		my = my + 8 - (int)(mw * mw * g);
-		if( my <= 0 ) {
+		if(mx <= -8) mx = 400;
+		if(mx >= 408) mx = -4;
+		my = my + jyv - (int)(mw * mw * g);
+		int jv = jyv - (int)(mw * mw * g);
+		int h = sm.onFloor(mx,my);
+		if( jv <= 0 && h != -1 ) {
 			mw = 0;
-			my = 0;
+			my = h;
 			ma = 2;
 			fj = false;
 		}
@@ -233,7 +322,8 @@ class FBImage extends JPanel implements Runnable {
 	double dstY1 = 0;
 	double dstX2 = 0;
 	double dstY2 = 0;
-	g.fillRect( (int)dstX1,(int)dstY1,(int)panelWidth,(int)panelHeight);
+	sm.drawMap(g,panelWidth,panelHeight);
+	//g.fillRect( (int)dstX1,(int)dstY1,(int)panelWidth,(int)panelHeight);
 	// ピーチの描画
 	int t = peach_timer % 16;
 	if(peach_timer>=16) {
@@ -243,9 +333,9 @@ class FBImage extends JPanel implements Runnable {
 	}
 	// マリオの描画
 	dstX1=(mx) * panelWidth / 400;
-	dstX2=dstX1 + (panelWidth / 8);
-	dstY1 = (panelHeight / 7) * 2 - my * panelHeight / 320;
-	dstY2 = dstY1 + (panelHeight / 7);
+	dstX2=dstX1 + 32 * panelWidth / 400;
+	dstY1 = (16 * 6 -my) * panelHeight / 320;
+	dstY2 = dstY1 + 32 * panelHeight / 320;
 	boolean b = false;
 	if(md == 1 ) { b = true; }
         buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,ma,0, b);
@@ -258,19 +348,19 @@ class FBImage extends JPanel implements Runnable {
 		peach_position[5 + t * 6] = (int)md;
 		peach_timer++;
 	}
-	dstX1=dstX2=0;
-	dstY1 = (panelHeight / 7) * 3;
-	for( int y=3; y<7; y++){
-	    for( int x=0; x<8; x++){
-		dstX2 += (panelWidth / 8);
-		dstY2 = dstY1 + (panelHeight / 7);
-		// スケーリング
-		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,x,y,false);
-		dstX1 = dstX2;
-	    }
-	    dstX1 = dstX2 = 0;
-	    dstY1 = dstY2;
-	}
+//	dstX1=dstX2=0;
+//	dstY1 = (panelHeight / 7) * 3;
+//	for( int y=3; y<7; y++){
+//	    for( int x=0; x<8; x++){
+//		dstX2 += (panelWidth / 8);
+//		dstY2 = dstY1 + (panelHeight / 7);
+//		// スケーリング
+//		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,x,y,false);
+//		dstX1 = dstX2;
+//	    }
+//	    dstX1 = dstX2 = 0;
+//	    dstY1 = dstY2;
+//	}
 	// ファイアボールの描画
 	fireBall(g2D, fb.fx, (int)( -fb.fy * panelHeight / 320 + (panelHeight / 7) * 3), fb.ft);
    }
