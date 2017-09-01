@@ -325,9 +325,15 @@ class FBImage extends JPanel implements Runnable {
 	// ピーチの描画
 	int t = peach_timer % 16;
 	if(peach_timer>=16) {
+		int px = peach_position[0+t*4];
+		int py = peach_position[1+t*4];
+		dstX1=(px) * panelWidth / 400;
+		dstX2=dstX1 + 32 * panelWidth / 400;
+		dstY1 = (16 * 6 -py) * panelHeight / 320;
+		dstY2 = dstY1 + 32 * panelHeight / 320;
 		boolean b = false;
-		if(peach_position[5+t*6] == 1 ) { b = true; }
-        	buffCopy(g2D, peach_position[0+t*6],peach_position[1+t*6],peach_position[2+t*6],peach_position[3+t*6],peach_position[4+t*6],1, b);
+		if(peach_position[3+t*4] == 1 ) { b = true; }
+        	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,peach_position[2+t*4],1, b);
 	}
 	// マリオの描画
 	dstX1=(mx) * panelWidth / 400;
@@ -338,12 +344,10 @@ class FBImage extends JPanel implements Runnable {
 	if(md == 1 ) { b = true; }
         buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,ma,0, b);
 	if(mario_move == true || peach_position[4+t*6] == 3) {
-		peach_position[0 + t * 6] = (int)dstX1;
-		peach_position[1 + t * 6] = (int)dstY1;
-		peach_position[2 + t * 6] = (int)dstX2;
-		peach_position[3 + t * 6] = (int)dstY2;
-		peach_position[4 + t * 6] = (int)ma;
-		peach_position[5 + t * 6] = (int)md;
+		peach_position[0 + t * 4] = (int)mx;
+		peach_position[1 + t * 4] = (int)my;
+		peach_position[2 + t * 4] = (int)ma;
+		peach_position[3 + t * 4] = (int)md;
 		peach_timer++;
 	}
 //	dstX1=dstX2=0;
