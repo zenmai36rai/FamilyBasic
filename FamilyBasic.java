@@ -34,7 +34,7 @@ class StageMap {
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,2,1,1,1,1,1,1,1,
+		1,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,2,1,1,1,1,1,1,1,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
@@ -84,6 +84,7 @@ class StageMap {
 			}
 		}
 	}
+	// 床の上にいるか
 	public int onFloor(int mx, int my) {
 		for(int y=0;y<20;y++){
 			for(int x=0;x<25;x++){
@@ -101,6 +102,25 @@ class StageMap {
 			}
 		}
 		return -1;
+	}
+	// ハシゴに昇れるか
+	public boolean onLadder(int mx, int my) {
+		for(int y=0;y<20;y++){
+			for(int x=0;x<25;x++){
+				int a = map[y*25+x];
+				// マップチップがブロックなら交差判定
+				if(a == 4){
+					int fx = x * 16;
+					int fy = 16 * 8 - y * 16;
+					if( fx - 16 <= mx && mx <= fx + 8 ) {
+						if ( fy -16 <= my && my <= fy + 16 ) {
+							return true;
+						}
+					}
+				}
+			}
+		}
+		return false;
 	}
 	private BufferedImage bg;
 	public int map[];
@@ -158,6 +178,8 @@ class FBImage extends JPanel implements Runnable {
     private BufferedImage image;
     private int key_left;
     private int key_right;
+    private int key_up;
+    private int key_down;
     private int key_jump;
     private int key_fire;
     private StageMap sm;
@@ -178,6 +200,12 @@ class FBImage extends JPanel implements Runnable {
     }
     public void setRight(int a) {
         key_right = a;
+    }
+    public void setUp(int a) {
+        key_up = a;
+    }
+    public void setDown(int a) {
+        key_down = a;
     }
     public void setJump(int a) {
     	if(key_jump == 0 && a == 1)
@@ -217,10 +245,8 @@ class FBImage extends JPanel implements Runnable {
     }
 
     public void fireBall(Graphics2D g2D,int fbx,int fby,int t){
-        double panelWidth = this.getWidth();
-        double panelHeight = this.getHeight();
-	double imageWidth = image.getWidth() - 16;
-	double imageHeight = image.getHeight() - 16;
+	double panelWidth = this.getWidth();
+	double panelHeight = this.getHeight();
 	double dstX1=(fbx) * panelWidth / 400;
 	double dstX2=dstX1 + (panelWidth / 25);
 	double dstY1=fby;
@@ -248,8 +274,8 @@ class FBImage extends JPanel implements Runnable {
 
 
     public void gameStart() {
-    	mario_move = false;
-    	peach_timer = 0;
+	mario_move = false;
+	peach_timer = 0;
 	peach_position = new int[240];
 	fb = new FireBall();
 	sm = new StageMap();
@@ -258,7 +284,7 @@ class FBImage extends JPanel implements Runnable {
     }
 
     public void run() {
-    	while( true ) {
+	while( true ) {
 	    moveCommand();
 	    repaint();
 	    try {
@@ -286,7 +312,7 @@ class FBImage extends JPanel implements Runnable {
 		mw = 0;
 	}
 	// 床から落ちる処理
-	if(sm.onFloor(mx,my) == -1 && fj == false) {
+	if(sm.onFloor(mx,my) == -1 && fj == false && ma != 5) {
 		jxv = 4;
 		if(key_left == 1) {
 			jxv=-4;
@@ -333,14 +359,35 @@ class FBImage extends JPanel implements Runnable {
 	}
 	if(mx < 0) mx = 400;
 	if(mx > 400) mx = 0;
+	// はしごを昇る処理
+	if(key_up == 1) {
+		if(sm.onLadder(mx,my + 1) == true) {
+			my = my + 2;
+			mw++;
+			if(mw == 12) { mw = 0; }
+			md = mw / 6;
+			ma = 5;
+			mario_move = true;
+		}
+	}
+	if(key_down == 1) {
+		if(sm.onLadder(mx,my - 1) == true) {
+			my = my - 2;
+			mw++;
+			if(mw == 12) { mw = 0; }
+			md = mw / 6;
+			ma = 5;
+			mario_move = true;
+		}
+	}
     }
 
     @Override
     public void paintComponent(Graphics g) {
-        Graphics2D g2D = (Graphics2D) g;
+	Graphics2D g2D = (Graphics2D) g;
 
-        double panelWidth = this.getWidth();
-        double panelHeight = this.getHeight();
+	double panelWidth = this.getWidth();
+	double panelHeight = this.getHeight();
 
 	double dstX1 = 0;
 	double dstY1 = 0;
@@ -359,7 +406,7 @@ class FBImage extends JPanel implements Runnable {
 		dstY2 = dstY1 + 32 * panelHeight / 320;
 		boolean b = false;
 		if(peach_position[3+t*4] == 1 ) { b = true; }
-        	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,peach_position[2+t*4],1, b);
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,peach_position[2+t*4],1, b);
 	}
 	// マリオの描画
 	dstX1=(mx) * panelWidth / 400;
@@ -368,7 +415,7 @@ class FBImage extends JPanel implements Runnable {
 	dstY2 = dstY1 + 32 * panelHeight / 320;
 	boolean b = false;
 	if(md == 1 ) { b = true; }
-        buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,ma,0, b);
+	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,ma,0, b);
 	if(mario_move == true || peach_position[2+t*4] == 3) {
 		peach_position[0 + t * 4] = (int)mx;
 		peach_position[1 + t * 4] = (int)my;
@@ -384,7 +431,7 @@ class FBImage extends JPanel implements Runnable {
 class FamilyBasic extends JFrame{
     private FBImage FBI;
     public static void main(String args[]){
-        FamilyBasic frame = new FamilyBasic();
+	FamilyBasic frame = new FamilyBasic();
 	frame.WindowEventSample();
 	frame.Key1();
 	frame.setVisible(true);
@@ -421,6 +468,8 @@ class FamilyBasic extends JFrame{
                     switch (e.getKeyCode()){  //押されたキーコードを得る
                         case KeyEvent.VK_LEFT  :  FBI.setLeft(1); break;
                         case KeyEvent.VK_RIGHT :  FBI.setRight(1); break;
+                        case KeyEvent.VK_UP  :  FBI.setUp(1); break;
+                        case KeyEvent.VK_DOWN :  FBI.setDown(1); break;
                         case KeyEvent.VK_Z :  FBI.setJump(1); break;
 			case KeyEvent.VK_X :  FBI.setFire(1); break;
                         default:
@@ -431,6 +480,8 @@ class FamilyBasic extends JFrame{
                     switch (e.getKeyCode()){  //押されたキーコードを得る
                         case KeyEvent.VK_LEFT  :  FBI.setLeft(0); break;
                         case KeyEvent.VK_RIGHT :  FBI.setRight(0); break;
+                        case KeyEvent.VK_UP  :  FBI.setUp(0); break;
+                        case KeyEvent.VK_DOWN :  FBI.setDown(0); break;
                         case KeyEvent.VK_Z :  FBI.setJump(0); break;
                         case KeyEvent.VK_X :  FBI.setFire(0); break;
                         default:
