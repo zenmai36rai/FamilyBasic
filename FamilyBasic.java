@@ -19,45 +19,67 @@ import java.awt.event.*;
 
 class StageMap {
 	public StageMap() {
+		try {
+			bg = ImageIO.read(getClass().getResource("fcbchrt.png"));
+		} catch (IOException ex) {
+			ex.printStackTrace();
+			bg = null;
+		}
 		map = new int[] {
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,
+		0,0,0,0,0,0,0,0,2,1,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,
-		1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,
-		1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,1,1,1,1,
+		1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,2,1,1,1,1,1,1,1,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
+		0,0,0,0,0,0,0,0,2,1,1,1,1,1,1,1,3,0,0,0,0,0,4,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
+		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4,0,0,
+		1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,1,1,1,1,
+		1,1,1,1,1,1,1,3,0,0,0,0,0,0,0,0,0,2,1,1,1,1,1,1,1,
+		1,1,1,1,1,1,1,1,1,3,0,0,0,0,0,2,1,1,1,1,1,1,1,1,1,
 		1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 		0 };
+		chip = new int[] {
+		0,0,	// 0:ダミー
+		0,5,	// 1:プロック
+		1,0,	// 2:左ブロック
+		0,0,	// 3:右ブロック
+		2,7,	// 4:ハシゴ
+		0 };
 	}
-	public void drawMap(Graphics g, double panelWidth, double panelHeight) {
+	public int getChipX(int a) {
+		return chip[a*2];
+	}
+	public int getChipY(int a) {
+		return chip[a*2+1];
+	}
+	public void drawMap(Graphics g, JPanel jp, double panelWidth, double panelHeight) {
+		Graphics2D g2D = (Graphics2D)g;
 		double imageWidth = 400;
 		double imageHeight = 320;
 		g.setColor(Color.black);
 		g.fillRect( (int)0,(int)0,(int)panelWidth,(int)panelHeight);
 		for(int y=0;y<20;y++){
 			for(int x=0;x<25;x++){
-				if(map[y*25+x] == 1){
+				if(map[y*25+x] != 0){
+					int a = map[y*25+x];
 					int dstX1 = (int)( x * 16 * panelWidth / imageWidth);
 					int dstY1 = (int)( y * 16 * panelHeight / imageHeight);
-					int dstX2 = (int)( 16 * panelWidth / imageWidth);
-					int dstY2 = (int)( 16 * panelHeight / imageHeight);
-					g.setColor(Color.blue);
-					g.fillRect( (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2);
-					g.setColor(Color.cyan);
-					g.drawRect( (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2);
+					int dstX2 = (int)( (x+1) * 16 * panelWidth / imageWidth);
+					int dstY2 = (int)( (y+1) * 16 * panelHeight / imageHeight);
+					int srcX1 = 35 + getChipX(a) * (16 + 16);
+					int srcY1 = 28 + getChipY(a) * (16 + 4);
+					int srcX2 = srcX1 + 16;
+					int srcY2 = srcY1 + 16;
+					g2D.drawImage(bg, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX1,srcY1,srcX2,srcY2, jp);
 				}
 			}
 		}
@@ -65,7 +87,9 @@ class StageMap {
 	public int onFloor(int mx, int my) {
 		for(int y=0;y<20;y++){
 			for(int x=0;x<25;x++){
-				if(map[y*25+x] == 1){
+				int a = map[y*25+x];
+				// マップチップがブロックなら交差判定
+				if(a == 1 || a == 2 || a == 3){
 					int fx = x * 16;
 					int fy = 16 * 8 - y * 16;
 					if( fx - 16 <= mx && mx <= fx + 16 ) {
@@ -78,7 +102,9 @@ class StageMap {
 		}
 		return -1;
 	}
+	private BufferedImage bg;
 	public int map[];
+	public int chip[];
 }
 class FireBall {
 	public FireBall() {
@@ -320,8 +346,8 @@ class FBImage extends JPanel implements Runnable {
 	double dstY1 = 0;
 	double dstX2 = 0;
 	double dstY2 = 0;
-	sm.drawMap(g,panelWidth,panelHeight);
-	//g.fillRect( (int)dstX1,(int)dstY1,(int)panelWidth,(int)panelHeight);
+	// マップの描画	
+	sm.drawMap(g2D,this,panelWidth,panelHeight);
 	// ピーチの描画
 	int t = peach_timer % 16;
 	if(peach_timer>=16) {
@@ -343,26 +369,13 @@ class FBImage extends JPanel implements Runnable {
 	boolean b = false;
 	if(md == 1 ) { b = true; }
         buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,ma,0, b);
-	if(mario_move == true || peach_position[4+t*6] == 3) {
+	if(mario_move == true || peach_position[2+t*4] == 3) {
 		peach_position[0 + t * 4] = (int)mx;
 		peach_position[1 + t * 4] = (int)my;
 		peach_position[2 + t * 4] = (int)ma;
 		peach_position[3 + t * 4] = (int)md;
 		peach_timer++;
 	}
-//	dstX1=dstX2=0;
-//	dstY1 = (panelHeight / 7) * 3;
-//	for( int y=3; y<7; y++){
-//	    for( int x=0; x<8; x++){
-//		dstX2 += (panelWidth / 8);
-//		dstY2 = dstY1 + (panelHeight / 7);
-//		// スケーリング
-//		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,x,y,false);
-//		dstX1 = dstX2;
-//	    }
-//	    dstX1 = dstX2 = 0;
-//	    dstY1 = dstY2;
-//	}
 	// ファイアボールの描画
 	fireBall(g2D, fb.fx, (int)( ( 16 * 7 -fb.fy ) * panelHeight / 320), fb.ft);
    }
