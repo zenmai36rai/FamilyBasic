@@ -108,7 +108,7 @@ class StageMap {
 		for(int y=0;y<20;y++){
 			for(int x=0;x<25;x++){
 				int a = map[y*25+x];
-				// マップチップがブロックなら交差判定
+				// マップチップがハシゴなら交差判定
 				if(a == 4){
 					int fx = x * 16;
 					int fy = 16 * 8 - y * 16;
@@ -195,6 +195,27 @@ class FBImage extends JPanel implements Runnable {
     private boolean mario_move;
     private int peach_position[];
     private int peach_timer;
+    int kx; // 亀
+    int ky;
+    int kd;
+    int kw;
+    int cx; // カニ
+    int cy;
+    int cd;
+    int cw;
+
+    public void gameStart() {
+	mario_move = false;
+	peach_timer = 0;
+	peach_position = new int[240];
+	kx = 400 - 32;
+	cy = -8 *16;
+	fb = new FireBall();
+	sm = new StageMap();
+	game_loop = new Thread(this);
+	game_loop.start();
+    }
+
     public void setLeft(int a) {
         key_left = a;
     }
@@ -233,7 +254,7 @@ class FBImage extends JPanel implements Runnable {
 		double imageWidth = image.getWidth();
 		double imageHeight = image.getHeight();
 		int srcX1 = 12 + x * (32 + 16);
-		int srcY1 = 12 + y * (32 + 10);
+		int srcY1 = 12 + y * (32 + 11);
 		int srcX2 = srcX1+32;
 		int srcY2 = srcY1+32;
 		// スケーリング
@@ -270,17 +291,6 @@ class FBImage extends JPanel implements Runnable {
 	} else {
 		g2D.drawImage(image, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX2,srcY1,srcX1,srcY2, this);
 	}
-    }
-
-
-    public void gameStart() {
-	mario_move = false;
-	peach_timer = 0;
-	peach_position = new int[240];
-	fb = new FireBall();
-	sm = new StageMap();
-	game_loop = new Thread(this);
-	game_loop.start();
     }
 
     public void run() {
@@ -338,24 +348,24 @@ class FBImage extends JPanel implements Runnable {
 		}
 		mw++;
 		mario_move = true;
-		return;
-	}
-	if(key_left == 1) {
-		mx = mx - 4;
-		md = 0;
-		mw++;
-		if(mw == 12 ) { mw = 0; }
-		ma = mw / 4;
-		if(ma == 3){ ma = 1; }
-		mario_move = true;
-	} else if(key_right == 1) {
-		mx =mx + 4;
-		md = 1;
-		mw++;
-		if(mw == 12 ) { mw = 0; }
-		ma = mw / 4;
-		if(ma == 3){ ma = 1; }
-		mario_move = true;
+	} else {
+		if(key_left == 1) {
+			mx = mx - 4;
+			md = 0;
+			mw++;
+			if(mw == 12 ) { mw = 0; }
+			ma = mw / 4;
+			if(ma == 3){ ma = 1; }
+			mario_move = true;
+		} else if(key_right == 1) {
+			mx =mx + 4;
+			md = 1;
+			mw++;
+			if(mw == 12 ) { mw = 0; }
+			ma = mw / 4;
+			if(ma == 3){ ma = 1; }
+			mario_move = true;
+		}
 	}
 	if(mx < 0) mx = 400;
 	if(mx > 400) mx = 0;
@@ -380,6 +390,38 @@ class FBImage extends JPanel implements Runnable {
 			mario_move = true;
 		}
 	}
+	// 亀の移動
+	if(kd == 0) {
+		if(sm.onFloor(kx-1,ky) == -1 ) {
+			kd = 1;
+		} else {
+			kx = kx - 1;
+		}
+	} else {
+		if(sm.onFloor(kx+1,ky) == -1 ) {
+			kd = 0;
+		} else {
+			kx = kx + 1;
+		}
+	}
+	kw++;
+	if(kw == 16 ) { kw = 0; }
+	// カニの移動
+	if(cd == 0) {
+		if(sm.onFloor(cx-2,cy) == -1 ) {
+			cd = 1;
+		} else {
+			cx = cx - 2;
+		}
+	} else {
+		if(sm.onFloor(cx+2,cy) == -1 ) {
+			cd = 0;
+		} else {
+			cx = cx + 2;
+		}
+	}
+	cw++;
+	if(cw == 8 ) { cw = 0; }
     }
 
     @Override
@@ -425,6 +467,23 @@ class FBImage extends JPanel implements Runnable {
 	}
 	// ファイアボールの描画
 	fireBall(g2D, fb.fx, (int)( ( 16 * 7 -fb.fy ) * panelHeight / 320), fb.ft);
+	// 亀の描画
+	dstX1=(kx) * panelWidth / 400;
+	dstX2=dstX1 + 32 * panelWidth / 400;
+	dstY1 = (16 * 6 -ky) * panelHeight / 320;
+	dstY2 = dstY1 + 32 * panelHeight / 320;
+	b = false;
+	if(kd == 1 ) { b = true; }
+	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,kw/8,6, b);
+	// カニの描画
+	dstX1=(cx) * panelWidth / 400;
+	dstX2=dstX1 + 32 * panelWidth / 400;
+	dstY1 = (16 * 6 -cy) * panelHeight / 320;
+	dstY2 = dstY1 + 32 * panelHeight / 320;
+	b = false;
+	if(cd == 1 ) { b = true; }
+	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,2+(cw/4),6, b);
+
    }
 };
 
