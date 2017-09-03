@@ -128,11 +128,20 @@ class StageMap {
 }
 class FireBall {
 	public FireBall() {
-		fx = 400;
+		fx = 1000;
 		fy = 0;
 		ft = 0;
 		ff = 3;
 	}
+	public boolean checkCross(int x, int y) {
+		if( fx - 16 <= x && x <= fx +16 ) {
+			if( fy - 16 <= y && y <= fy +16 ) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	public void moveFireBall(StageMap sm, int mx, int my, int md, int key_fire, int key_left, int key_right) {
 		double g = 0.0625;
 		ft++;
@@ -199,10 +208,12 @@ class FBImage extends JPanel implements Runnable {
     int ky;
     int kd;
     int kw;
+    int kf;
     int cx; // カニ
     int cy;
     int cd;
     int cw;
+    int cf;
 
     public void gameStart() {
 	mario_move = false;
@@ -391,37 +402,61 @@ class FBImage extends JPanel implements Runnable {
 		}
 	}
 	// 亀の移動
-	if(kd == 0) {
-		if(sm.onFloor(kx-1,ky) == -1 ) {
-			kd = 1;
-		} else {
-			kx = kx - 1;
+	if(kf == 0 && fb.checkCross(kx, ky)) {
+		kf = 1;
+		kw = 0;
+	} 
+	if(kf == 1){
+		kw++;
+		if(kw > 120) {
+			kf = 0;
+			kw = 0;
 		}
 	} else {
-		if(sm.onFloor(kx+1,ky) == -1 ) {
-			kd = 0;
+		if(kd == 0) {
+			if(sm.onFloor(kx-1,ky) == -1 ) {
+				kd = 1;
+			} else {
+				kx = kx - 1;
+			}
 		} else {
-			kx = kx + 1;
+			if(sm.onFloor(kx+1,ky) == -1 ) {
+				kd = 0;
+			} else {
+				kx = kx + 1;
+			}
 		}
+		kw++;
+		if(kw == 16 ) { kw = 0; }
 	}
-	kw++;
-	if(kw == 16 ) { kw = 0; }
+	if(cf == 0 && fb.checkCross(cx, cy)) {
+		cf = 1;
+		cw = 0;
+	} 
 	// カニの移動
-	if(cd == 0) {
-		if(sm.onFloor(cx-2,cy) == -1 ) {
-			cd = 1;
-		} else {
-			cx = cx - 2;
+	if(cf == 1){
+		cw++;
+		if(cw > 120) {
+			cf = 0;
+			cw = 0;
 		}
 	} else {
-		if(sm.onFloor(cx+2,cy) == -1 ) {
-			cd = 0;
+		if(cd == 0) {
+			if(sm.onFloor(cx-1,cy) == -1 ) {
+				cd = 1;
+			} else {
+				cx = cx - 2;
+			}
 		} else {
-			cx = cx + 2;
+			if(sm.onFloor(cx+1,cy) == -1 ) {
+				cd = 0;
+			} else {
+				cx = cx + 2;
+			}
 		}
-	}
-	cw++;
-	if(cw == 8 ) { cw = 0; }
+		cw++;
+		if(cw == 8 ) { cw = 0; }
+	  }
     }
 
     @Override
@@ -474,7 +509,12 @@ class FBImage extends JPanel implements Runnable {
 	dstY2 = dstY1 + 32 * panelHeight / 320;
 	b = false;
 	if(kd == 1 ) { b = true; }
-	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,kw/8,6, b);
+	if ( kf == 0 ) {
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,kw/8,6, b);
+	} else {
+		int fa = 6 + (kw % 16) / 8;
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,fa,3, b);
+	}
 	// カニの描画
 	dstX1=(cx) * panelWidth / 400;
 	dstX2=dstX1 + 32 * panelWidth / 400;
@@ -482,9 +522,13 @@ class FBImage extends JPanel implements Runnable {
 	dstY2 = dstY1 + 32 * panelHeight / 320;
 	b = false;
 	if(cd == 1 ) { b = true; }
-	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,2+(cw/4),6, b);
-
-   }
+	if ( cf == 0 ) {
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,2+(cw/4),6, b);
+	} else {
+		int fa = 6 + (cw % 16) / 8;
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,fa,3, b);
+	}
+    }
 };
 
 class FamilyBasic extends JFrame{
