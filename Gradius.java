@@ -13,6 +13,7 @@ import java.awt.BorderLayout;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.Color;
+import java.util.Calendar;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -80,7 +81,7 @@ class StageMap {
 					if(y < 19) {
 						ax = sx % 400;
 						ax = ((x * 16) - ax);
-						if(ax < -16) {
+						if(ax <= -16) {
 							ax = 400 + ax;
 						}
 					}
@@ -92,6 +93,13 @@ class StageMap {
 					int srcY1 = 28 + getChipY(a) * (16 + 4);
 					int srcX2 = srcX1 + 16;
 					int srcY2 = srcY1 + 16;
+					g2D.drawImage(bg, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX1,srcY1,srcX2,srcY2, jp);
+					// はみ出したチップは右端にループ
+					if(-16 < ax && ax < 0) {
+						ax = 400 + ax;
+					}
+					dstX1 = (int)( ax * panelWidth / imageWidth);
+					dstX2 = (int)( (ax + 16) * panelWidth / imageWidth);
 					g2D.drawImage(bg, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX1,srcY1,srcX2,srcY2, jp);
 				}
 			}
@@ -154,7 +162,10 @@ class MainPanel extends JPanel implements Runnable {
     private boolean fmove;
     private Option opt[];
     private int gt; // ゲーム進行フレーム
+    private long gtimer; //フレーム進行タイマー	
     
+    final int FRAME_INTERVAL = 16;
+    final int SCROLL_SPEED = 3;
     final int FIRE_MAX = 256;
     final int OPT_MAX = 2;
 
@@ -249,11 +260,18 @@ class MainPanel extends JPanel implements Runnable {
 
     public void run() {
 	while( true ) {
+	    long buff = gtimer;
 	    moveCommand();
 	    repaint();
-	    sx = sx + 4; // スクロール
+	    sx = sx + SCROLL_SPEED; // スクロール
 	    try {
-	    	Thread.sleep(18);
+		for(int i=0; i<FRAME_INTERVAL; i++){
+			Thread.sleep(1);
+			gtimer = System.currentTimeMillis();
+			if (FRAME_INTERVAL <= gtimer - buff) {
+				break;
+			}
+		}
 	    } catch (InterruptedException e) {
 	    	e.printStackTrace();
 	    }
