@@ -66,7 +66,7 @@ class StageMap {
 	public int getChipY(int a) {
 		return chip[a*2+1];
 	}
-	public void drawMap(Graphics g, JPanel jp, double panelWidth, double panelHeight) {
+	public void drawMap(Graphics g, int sx, JPanel jp, double panelWidth, double panelHeight) {
 		Graphics2D g2D = (Graphics2D)g;
 		double imageWidth = 400;
 		double imageHeight = 320;
@@ -76,9 +76,17 @@ class StageMap {
 			for(int x=0;x<25;x++){
 				if(map[y*25+x] != 0){
 					int a = map[y*25+x];
-					int dstX1 = (int)( x * 16 * panelWidth / imageWidth);
+					int ax = x * 16;
+					if(y < 19) {
+						ax = sx % 400;
+						ax = ((x * 16) - ax);
+						if(ax < -16) {
+							ax = 400 + ax;
+						}
+					}
+					int dstX1 = (int)( ax * panelWidth / imageWidth);
 					int dstY1 = (int)( y * 16 * panelHeight / imageHeight);
-					int dstX2 = (int)( (x+1) * 16 * panelWidth / imageWidth);
+					int dstX2 = (int)( (ax + 16) * panelWidth / imageWidth);
 					int dstY2 = (int)( (y+1) * 16 * panelHeight / imageHeight);
 					int srcX1 = 35 + getChipX(a) * (16 + 16);
 					int srcY1 = 28 + getChipY(a) * (16 + 4);
@@ -138,6 +146,7 @@ class MainPanel extends JPanel implements Runnable {
     private int key_jump;
     private int key_fire;
     private StageMap sm;
+    private int sx;
     private int mx; // 自機の位置
     private int my; // 自機の位置
     private FireBall fb[];
@@ -242,6 +251,7 @@ class MainPanel extends JPanel implements Runnable {
 	while( true ) {
 	    moveCommand();
 	    repaint();
+	    sx = sx + 4; // スクロール
 	    try {
 	    	Thread.sleep(18);
 	    } catch (InterruptedException e) {
@@ -298,7 +308,7 @@ class MainPanel extends JPanel implements Runnable {
 	double dstX2 = 0;
 	double dstY2 = 0;
 	// マップの描画	
-	sm.drawMap(g2D,this,panelWidth,panelHeight);
+	sm.drawMap(g2D,sx,this,panelWidth,panelHeight);
 	// オプションの描画
 	for(int i=0; i<OPT_MAX; i++){
 		int t = gt % (16 * (i+1));
