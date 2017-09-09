@@ -14,6 +14,7 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.Color;
 import java.util.Calendar;
+import java.util.Random;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -114,11 +115,12 @@ class FireBall {
 		fx = 1000;
 		fy = 0;
 	}
-	public boolean checkCross(int x, int y) {
-		if( fx - 16 <= x && x <= fx +16 ) {
-			if( fy - 16 <= y && y <= fy +16 ) {
-				return true;
-			}
+	public boolean checkCross(int x, int y, int w, int h) {
+		if(Math.abs((fx + 8) - (x + 16)) < w/2 + 4 //横の判定
+		   &&
+		   Math.abs((fy + 8) - (y + 16)) < h/2 + 4 //縦の判定
+		) {
+			return true;
 		}
 		return false;
 	}
@@ -143,6 +145,14 @@ class Option {
 		}
 	}
 }
+class Enemy {
+	Enemy (int x, int y) {
+		ex = x;
+		ey = y;
+	}
+	int ex;
+	int ey;
+}
 class MainPanel extends JPanel implements Runnable {
     // 描画する画像
     private Thread game_loop;
@@ -161,6 +171,8 @@ class MainPanel extends JPanel implements Runnable {
     private int ff;
     private boolean fmove;
     private Option opt[];
+    private Enemy em[];
+    private Random rnd;
     private int gt; // ゲーム進行フレーム
     private long gtimer; //フレーム進行タイマー	
     
@@ -168,6 +180,7 @@ class MainPanel extends JPanel implements Runnable {
     final int SCROLL_SPEED = 3;
     final int FIRE_MAX = 256;
     final int OPT_MAX = 2;
+    final int ENEMY_MAX = 8;
 
     public void gameStart() {
 	fmove = false;
@@ -178,6 +191,13 @@ class MainPanel extends JPanel implements Runnable {
 	opt = new Option[OPT_MAX];
 	for( int i = 0; i < OPT_MAX; i++){
 		opt[i] = new Option(mx,my);
+	}
+	rnd = new Random();
+	em = new Enemy[ENEMY_MAX];
+	for( int i = 0; i < ENEMY_MAX; i++){
+		int x = rnd.nextInt(200) + 400;
+		int y = -rnd.nextInt(320 - 64) + 64;
+		em[i] = new Enemy(x,y);
 	}
 	sm = new StageMap();
 	game_loop = new Thread(this);
@@ -264,6 +284,13 @@ class MainPanel extends JPanel implements Runnable {
 	    moveCommand();
 	    repaint();
 	    sx = sx + SCROLL_SPEED; // スクロール
+	    if(sx % 900 == 0){
+		for( int i = 0; i < ENEMY_MAX; i++){
+			int x = rnd.nextInt(200) + 400;
+			int y = -rnd.nextInt(320 - 64) + 64;
+			em[i] = new Enemy(x,y);
+		}
+	    }
 	    try {
 		for(int i=0; i<FRAME_INTERVAL; i++){
 			Thread.sleep(1);
@@ -312,6 +339,15 @@ class MainPanel extends JPanel implements Runnable {
 		my = my - 4;
 		fmove = true;
 	}
+	for( int i = 0; i < ENEMY_MAX; i++){
+		em[i].ex = em[i].ex - 2;
+		for(int n=0; n<FIRE_MAX; n++){
+			if(fb[n].checkCross(em[i].ex,em[i].ey,32,32)){
+				em[i].ex = -100;
+				fb[n].fx = 1000;
+			}
+		}
+	}
     }
 
     @Override
@@ -354,6 +390,14 @@ class MainPanel extends JPanel implements Runnable {
 	// ファイアボールの描画
 	for( int i=0; i<FIRE_MAX; i++ ) {
 		fireBall(g2D, fb[i].fx, (int)( ( 16 * 7 -fb[i].fy ) * panelHeight / 320), 0);
+	}
+	// 敵の描画
+	for( int i = 0; i < ENEMY_MAX; i++){
+		dstX1=(em[i].ex) * panelWidth / 400;
+		dstX2=dstX1 + 32 * panelWidth / 400;
+		dstY1 = (16 * 6 -em[i].ey) * panelHeight / 320;
+		dstY2 = dstY1 + 32 * panelHeight / 320;
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,0,2,false);
 	}
     }
 };
