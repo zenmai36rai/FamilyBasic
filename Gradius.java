@@ -184,6 +184,7 @@ class MainPanel extends JPanel implements Runnable {
 
     public void gameStart() {
 	fmove = false;
+	my = 16 * 4;
 	fb = new FireBall[FIRE_MAX];
 	for( int i = 0; i < FIRE_MAX; i++){
 		fb[i] = new FireBall();
@@ -196,7 +197,7 @@ class MainPanel extends JPanel implements Runnable {
 	em = new Enemy[ENEMY_MAX];
 	for( int i = 0; i < ENEMY_MAX; i++){
 		int x = rnd.nextInt(200) + 400;
-		int y = -rnd.nextInt(320 - 64) + 64;
+		int y = rnd.nextInt(320 - 96) + 32;
 		em[i] = new Enemy(x,y);
 	}
 	sm = new StageMap();
@@ -286,9 +287,8 @@ class MainPanel extends JPanel implements Runnable {
 	    sx = sx + SCROLL_SPEED; // スクロール
 	    if(sx % 900 == 0){
 		for( int i = 0; i < ENEMY_MAX; i++){
-			int x = rnd.nextInt(200) + 400;
-			int y = -rnd.nextInt(320 - 64) + 64;
-			em[i] = new Enemy(x,y);
+			em[i].ex = rnd.nextInt(200) + 400;
+			em[i].ey = rnd.nextInt(320 - 96) + 32;
 		}
 	    }
 	    try {
@@ -309,13 +309,13 @@ class MainPanel extends JPanel implements Runnable {
 	double g = 0.0625;
 	if( key_fire == 1 ) {
 		fb[ff].fx = mx + 16;
-		fb[ff].fy = my + 12;
+		fb[ff].fy = my + 8;
 		ff++;
 		if(ff == FIRE_MAX) ff = 0;
 		for(int i=0; i<OPT_MAX; i++){
 			int t = gt % (16 * (i+1));
 			fb[ff].fx = opt[i].ox[t] + 16;
-			fb[ff].fy = opt[i].oy[t] + 12;
+			fb[ff].fy = opt[i].oy[t] + 8;
 			ff++;
 			if(ff == FIRE_MAX) ff = 0;
 		}
@@ -333,10 +333,10 @@ class MainPanel extends JPanel implements Runnable {
 		fmove = true;
 	}
 	if(key_up == 1) {
-		my = my + 4;
+		my = my - 4;
 		fmove = true;
 	} else if(key_down == 1) {
-		my = my - 4;
+		my = my + 4;
 		fmove = true;
 	}
 	for( int i = 0; i < ENEMY_MAX; i++){
@@ -361,6 +361,8 @@ class MainPanel extends JPanel implements Runnable {
 	double dstY1 = 0;
 	double dstX2 = 0;
 	double dstY2 = 0;
+	// アニメーション係数
+	int a = (sx % 36) / 18;
 	// マップの描画	
 	sm.drawMap(g2D,sx,this,panelWidth,panelHeight);
 	// オプションの描画
@@ -368,14 +370,14 @@ class MainPanel extends JPanel implements Runnable {
 		int t = gt % (16 * (i+1));
 		dstX1=(opt[i].ox[t]) * panelWidth / 400;
 		dstX2=dstX1 + 32 * panelWidth / 400;
-		dstY1 = (16 * 6 -opt[i].oy[t]) * panelHeight / 320;
+		dstY1 = opt[i].oy[t] * panelHeight / 320;
 		dstY2 = dstY1 + 32 * panelHeight / 320;
-		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,6,3, true);
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,6+a,3, true);
 	}
 	// 自機の描画
 	dstX1=(mx) * panelWidth / 400;
 	dstX2=dstX1 + 32 * panelWidth / 400;
-	dstY1 = (16 * 6 -my) * panelHeight / 320;
+	dstY1 = my * panelHeight / 320;
 	dstY2 = dstY1 + 32 * panelHeight / 320;
 	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,3,5, true);
 	// フレーム進行
@@ -389,15 +391,15 @@ class MainPanel extends JPanel implements Runnable {
 	}
 	// ファイアボールの描画
 	for( int i=0; i<FIRE_MAX; i++ ) {
-		fireBall(g2D, fb[i].fx, (int)( ( 16 * 7 -fb[i].fy ) * panelHeight / 320), 0);
+		fireBall(g2D, fb[i].fx, (int)( fb[i].fy * panelHeight / 320), 0);
 	}
 	// 敵の描画
 	for( int i = 0; i < ENEMY_MAX; i++){
 		dstX1=(em[i].ex) * panelWidth / 400;
 		dstX2=dstX1 + 32 * panelWidth / 400;
-		dstY1 = (16 * 6 -em[i].ey) * panelHeight / 320;
+		dstY1 = em[i].ey * panelHeight / 320;
 		dstY2 = dstY1 + 32 * panelHeight / 320;
-		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,0,2,false);
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,4+a,6,false);
 	}
     }
 };
