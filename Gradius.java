@@ -132,6 +132,31 @@ class FireBall {
 	public int fx;
 	public int fy;
 }
+class EnemyFire {
+	public EnemyFire() {
+		eraseFire();
+	}
+	public void eraseFire() {
+		bx = -100;
+		by =  0;
+		vx = 0;
+		vy = 0;
+	}
+	public void setFire(int tx, int ty, int x, int y, double speed) {
+		bx = x + 16;
+		by = y + 16;
+		vx = -3;
+		vy = 0;
+	}
+	public void moveEnemyFire(StageMap sm, int mx, int my) {
+		bx = bx +vx;
+		by = by +vy;
+	}
+	public double bx;
+	public double by;
+	public double vx;
+	public double vy;
+}
 class Option {
 	final int OPT_DLY = 64;
 	int ox[];
@@ -172,6 +197,8 @@ class MainPanel extends JPanel implements Runnable {
     private boolean fmove;
     private Option opt[];
     private Enemy em[];
+    private EnemyFire ef[];
+    private int eff;
     private Random rnd;
     private int gt; // ゲーム進行フレーム
     private long gtimer; //フレーム進行タイマー	
@@ -186,8 +213,10 @@ class MainPanel extends JPanel implements Runnable {
 	fmove = false;
 	my = 16 * 4;
 	fb = new FireBall[FIRE_MAX];
+	ef = new EnemyFire[FIRE_MAX];
 	for( int i = 0; i < FIRE_MAX; i++){
 		fb[i] = new FireBall();
+		ef[i] = new EnemyFire();
 	}
 	opt = new Option[OPT_MAX];
 	for( int i = 0; i < OPT_MAX; i++){
@@ -323,6 +352,7 @@ class MainPanel extends JPanel implements Runnable {
 	}
 	for( int i=0; i<FIRE_MAX; i++ ) {
 		fb[i].moveFireBall(sm,mx,my,0,key_fire,key_left,key_right);
+		ef[i].moveEnemyFire(sm,mx,my);
 	}
 	fmove = false;
 	if(key_left == 1) {
@@ -341,6 +371,11 @@ class MainPanel extends JPanel implements Runnable {
 	}
 	for( int i = 0; i < ENEMY_MAX; i++){
 		em[i].ex = em[i].ex - 2;
+		if(rnd.nextInt(300) == 0) {
+			ef[eff].setFire(mx,my,em[i].ex,em[i].ey,3);
+			eff++;
+			if(eff == FIRE_MAX) eff = 0;
+		}
 		for(int n=0; n<FIRE_MAX; n++){
 			if(fb[n].checkCross(em[i].ex,em[i].ey,32,32)){
 				em[i].ex = -100;
@@ -392,6 +427,7 @@ class MainPanel extends JPanel implements Runnable {
 	// ファイアボールの描画
 	for( int i=0; i<FIRE_MAX; i++ ) {
 		fireBall(g2D, fb[i].fx, (int)( fb[i].fy * panelHeight / 320), 0);
+		fireBall(g2D, (int)ef[i].bx, (int)( ef[i].by * panelHeight / 320), sx / 3);
 	}
 	// 敵の描画
 	for( int i = 0; i < ENEMY_MAX; i++){
