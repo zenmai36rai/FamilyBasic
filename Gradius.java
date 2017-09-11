@@ -14,7 +14,6 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.Color;
 import java.util.Calendar;
-import java.util.Random;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -178,6 +177,23 @@ class Enemy {
 	int ex;
 	int ey;
 }
+class OriginalRandom {
+	private static final double M = 65536;
+	private static final double A = 997;
+	private static final double B = 1;
+	private static final double X = 573;
+	private double x;
+	OriginalRandom() {
+		x = X;
+	}
+	private void next() {
+		x = (A * x + B) % M;
+	}
+	public int nextInt(int a) {
+		next();
+		return (int)x % a;
+	}
+}
 class MainPanel extends JPanel implements Runnable {
     // 描画する画像
     private Thread game_loop;
@@ -199,7 +215,7 @@ class MainPanel extends JPanel implements Runnable {
     private Enemy em[];
     private EnemyFire ef[];
     private int eff;
-    private Random rnd;
+    private OriginalRandom rnd;
     private int gt; // ゲーム進行フレーム
     private long gtimer; //フレーム進行タイマー	
     
@@ -222,7 +238,7 @@ class MainPanel extends JPanel implements Runnable {
 	for( int i = 0; i < OPT_MAX; i++){
 		opt[i] = new Option(mx,my);
 	}
-	rnd = new Random();
+	rnd = new OriginalRandom();
 	em = new Enemy[ENEMY_MAX];
 	for( int i = 0; i < ENEMY_MAX; i++){
 		int x = rnd.nextInt(200) + 400;
