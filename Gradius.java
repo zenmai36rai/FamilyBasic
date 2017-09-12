@@ -160,7 +160,7 @@ class EnemyFire {
 	public double vy;
 }
 class Option {
-	final int OPT_DLY = 64;
+	final int OPT_DLY = 256;
 	int ox[];
 	int oy[];
 	Option (int x, int y) {
@@ -175,7 +175,7 @@ class Option {
 class Enemy {
 	Enemy (int x, int y) {
 		ex = x;
-		ey = y;
+		y_center = y;
 	}
 	public boolean isDisp() {
 		if(-32 < ex && ex < 400 && -32 < ey && ey < 320 ) {
@@ -183,8 +183,14 @@ class Enemy {
 		}
 		return false;
 	}
-	int ex;
-	int ey;
+	public void moveEnemy(){
+		ex = ex - 2;
+		ey = y_center + Math.cos(ex / 32) * 32;
+	}
+
+	double ex;
+	double ey;
+	double y_center;
 }
 class OriginalRandom {
 	private static final double M = 65536;
@@ -230,9 +236,10 @@ class MainPanel extends JPanel implements Runnable {
     
     final int FRAME_INTERVAL = 16;
     final int SCROLL_SPEED = 3;
-    final int FIRE_MAX = 256;
+    final int FIRE_MAX = 1024;
     final int OPT_MAX = 2;
     final int ENEMY_MAX = 8;
+    final int BULLET_RATE = 300;
 
     public void gameStart() {
 	fmove = false;
@@ -395,17 +402,17 @@ class MainPanel extends JPanel implements Runnable {
 		fmove = true;
 	}
 	for( int i = 0; i < ENEMY_MAX; i++){
-		em[i].ex = em[i].ex - 2;
+		em[i].moveEnemy();
 		if(em[i].isDisp() == false) {
 			continue;
 		}
-		if(rnd.nextInt(100) == 0) {
-			ef[eff].setFire(mx,my,em[i].ex,em[i].ey,3);
+		if(rnd.nextInt(BULLET_RATE) == 0) {
+			ef[eff].setFire(mx,my,(int)em[i].ex,(int)em[i].ey,3);
 			eff++;
 			if(eff == FIRE_MAX) eff = 0;
 		}
 		for(int n=0; n<FIRE_MAX; n++){
-			if(fb[n].checkCross(em[i].ex,em[i].ey,32,32)){
+			if(fb[n].checkCross((int)em[i].ex,(int)em[i].ey,32,32)){
 				em[i].ex = -100;
 				fb[n].fx = 1000;
 			}
