@@ -187,10 +187,45 @@ class Enemy {
 		ex = ex - 2;
 		ey = y_center + Math.cos(ex / 32) * 32;
 	}
-
 	double ex;
 	double ey;
 	double y_center;
+}
+class Tank {
+	Tank (int x, int y) {
+		tx = x;
+		ty = y;
+	}
+	public void moveTank(StageMap sm, int sx){
+		tx = tx + 2;
+		ty = 320 - 48;
+		// 床の上にいるか
+		for(int y=18;y>0;y--){
+			for(int x=0;x<25;x++){
+				int a = sm.map[y*25+x];
+				int ax = sx % 400;
+				ax = ((x * 16) - ax);
+				if(ax <= -16) {
+					ax = 400 + ax;
+				}
+				// マップチップがブロックなら交差判定
+				if(a == 5 || a == 6){
+					int fx = ax;
+					int fy = y * 16;
+					int w = 32;
+					int h = 32;
+					if(Math.abs((fx + 8) - (tx + 16)) < w/2 + 4 //横の判定
+					   &&
+					   Math.abs((fy + 8) - (ty + 16)) < h/2 + 4 //縦の判定
+					) {
+						ty = fy - 32;
+					}
+				}
+			}
+		}
+	}
+	public double tx;
+	public double ty;
 }
 class OriginalRandom {
 	private static final double M = 65536;
@@ -229,6 +264,7 @@ class MainPanel extends JPanel implements Runnable {
     private Option opt[];
     private Enemy em[];
     private EnemyFire ef[];
+    private Tank ta;
     private int eff;
     private OriginalRandom rnd;
     private int gt; // ゲーム進行フレーム
@@ -258,9 +294,10 @@ class MainPanel extends JPanel implements Runnable {
 	em = new Enemy[ENEMY_MAX];
 	for( int i = 0; i < ENEMY_MAX; i++){
 		int x = rnd.nextInt(200) + 400;
-		int y = rnd.nextInt(320 - 96) + 32;
+		int y = rnd.nextInt(320 - 128) + 64;
 		em[i] = new Enemy(x,y);
 	}
+	ta = new Tank(1000, 0);
 	sm = new StageMap();
 	game_loop = new Thread(this);
 	game_loop.start();
@@ -297,7 +334,7 @@ class MainPanel extends JPanel implements Runnable {
         }
     }
 
-    public void buffCopy(Graphics2D g2D, int dstX1,int dstY1,int dstX2,int dstY2,int x,int y, boolean lr){
+    public void buffCopy(Graphics2D g2D, int dstX1,int dstY1,int dstX2,int dstY2,int x,int y, boolean lr, boolean ud){
 		double imageWidth = image.getWidth();
 		double imageHeight = image.getHeight();
 		int srcX1 = 12 + x * (32 + 16);
@@ -305,11 +342,17 @@ class MainPanel extends JPanel implements Runnable {
 		int srcX2 = srcX1+32;
 		int srcY2 = srcY1+32;
 		// スケーリング
-		if( lr == false ) {
-		    g2D.drawImage(image, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX1,srcY1,srcX2,srcY2, this);
-		} else {
-		    g2D.drawImage(image, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX2,srcY1,srcX1,srcY2, this);
+		if( lr == true ) {
+			int buff = srcX1;
+			srcX1 = srcX2;
+			srcX2 = buff;
 		}
+		if( ud == true ) {
+			int buff = srcY1;
+			srcY1 = srcY2;
+			srcY2 = buff;
+		}
+		g2D.drawImage(image, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX1,srcY1,srcX2,srcY2, this);
     }
 
     public void fireBall(Graphics2D g2D,int fbx,int fby,int t){
@@ -333,11 +376,12 @@ class MainPanel extends JPanel implements Runnable {
 	int srcX2 = x+16;
 	int srcY2 = y+16;
 	// スケーリング
-	if( lr == false ) {
-		g2D.drawImage(image, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX1,srcY1,srcX2,srcY2, this);
-	} else {
-		g2D.drawImage(image, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX2,srcY1,srcX1,srcY2, this);
+	if( lr == true ) {
+		int buff = srcX1;
+		srcX1 = srcX2;
+		srcX2 = buff;
 	}
+	g2D.drawImage(image, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,srcX1,srcY1,srcX2,srcY2, this);
     }
 
     public void run() {
@@ -346,11 +390,12 @@ class MainPanel extends JPanel implements Runnable {
 	    moveCommand();
 	    repaint();
 	    sx = sx + SCROLL_SPEED; // スクロール
-	    if(sx % 900 == 0){
+	    if(sx % 900 == 0){	// 敵発生
 		for( int i = 0; i < ENEMY_MAX; i++){
 			em[i].ex = rnd.nextInt(200) + 400;
-			em[i].ey = rnd.nextInt(320 - 96) + 32;
+			em[i].ey = rnd.nextInt(320 - 128) + 64;
 		}
+		ta.tx = -96;
 	    }
 	    try {
 		for(int i=0; i<FRAME_INTERVAL; i++){
@@ -401,6 +446,7 @@ class MainPanel extends JPanel implements Runnable {
 		my = my + 4;
 		fmove = true;
 	}
+	// 敵の移動
 	for( int i = 0; i < ENEMY_MAX; i++){
 		em[i].moveEnemy();
 		if(em[i].isDisp() == false) {
@@ -416,6 +462,19 @@ class MainPanel extends JPanel implements Runnable {
 				em[i].ex = -100;
 				fb[n].fx = 1000;
 			}
+		}
+	}
+	// 戦車（カメ）の移動
+	ta.moveTank(sm,sx);
+	if(ta.tx < 400 && rnd.nextInt(BULLET_RATE) == 0) {
+		ef[eff].setFire(mx,my,(int)ta.tx,(int)ta.ty,3);
+		eff++;
+		if(eff == FIRE_MAX) eff = 0;
+	}
+	for(int n=0; n<FIRE_MAX; n++){
+		if(fb[n].checkCross((int)ta.tx,(int)ta.ty,32,32)){
+			ta.tx = 1000;
+			fb[n].fx = 1000;
 		}
 	}
     }
@@ -442,14 +501,14 @@ class MainPanel extends JPanel implements Runnable {
 		dstX2=dstX1 + 32 * panelWidth / 400;
 		dstY1 = opt[i].oy[t] * panelHeight / 320;
 		dstY2 = dstY1 + 32 * panelHeight / 320;
-		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,6+a,3, true);
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,6+a,3, true, false);
 	}
 	// 自機の描画
 	dstX1=(mx) * panelWidth / 400;
 	dstX2=dstX1 + 32 * panelWidth / 400;
 	dstY1 = my * panelHeight / 320;
 	dstY2 = dstY1 + 32 * panelHeight / 320;
-	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,3,5, true);
+	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,3,5, true, false);
 	// フレーム進行
 	if(fmove){
 		for(int i=0; i<OPT_MAX; i++){
@@ -470,8 +529,18 @@ class MainPanel extends JPanel implements Runnable {
 		dstX2=dstX1 + 32 * panelWidth / 400;
 		dstY1 = em[i].ey * panelHeight / 320;
 		dstY2 = dstY1 + 32 * panelHeight / 320;
-		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,4+a,6,false);
+		buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,4+a,6,false, false);
 	}
+	// 戦車（カメ）の描画
+	dstX1=(ta.tx) * panelWidth / 400;
+	dstX2=dstX1 + 32 * panelWidth / 400;
+	dstY1 = ta.ty * panelHeight / 320;
+	dstY2 = dstY1 + 32 * panelHeight / 320;
+	boolean td = true;
+	if(mx < ta.tx) {
+		td = false;
+	}
+	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,0+a,6,td,false);
     }
 };
 
