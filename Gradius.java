@@ -142,10 +142,13 @@ class EnemyFire {
 		vy = 0;
 	}
 	public void setFire(int tx, int ty, int x, int y, double speed) {
+		double mx = tx + 16;
+		double my = ty + 16;
 		bx = x + 16;
 		by = y + 16;
-		vx = -3;
-		vy = 0;
+		double d = Math.sqrt((mx - bx) * (mx - bx) + (my - by) * (my - by));
+		vx = (mx - bx) / d * speed;
+		vy = (my - by) / d * speed;
 	}
 	public void moveEnemyFire(StageMap sm, int mx, int my) {
 		bx = bx +vx;
@@ -173,6 +176,12 @@ class Enemy {
 	Enemy (int x, int y) {
 		ex = x;
 		ey = y;
+	}
+	public boolean isDisp() {
+		if(-32 < ex && ex < 400 && -32 < ey && ey < 320 ) {
+			return true;
+		}
+		return false;
 	}
 	int ex;
 	int ey;
@@ -387,7 +396,10 @@ class MainPanel extends JPanel implements Runnable {
 	}
 	for( int i = 0; i < ENEMY_MAX; i++){
 		em[i].ex = em[i].ex - 2;
-		if(rnd.nextInt(300) == 0) {
+		if(em[i].isDisp() == false) {
+			continue;
+		}
+		if(rnd.nextInt(100) == 0) {
 			ef[eff].setFire(mx,my,em[i].ex,em[i].ey,3);
 			eff++;
 			if(eff == FIRE_MAX) eff = 0;
