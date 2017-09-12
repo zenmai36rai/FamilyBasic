@@ -197,7 +197,12 @@ class Tank {
 		ty = y;
 	}
 	public void moveTank(StageMap sm, int sx){
-		tx = tx + 2;
+		if(stop > 0) {
+			tx = tx - 3;
+			stop--;
+		} else {
+			tx = tx + 2;
+		}
 		ty = 320 - 48;
 		// 床の上にいるか
 		for(int y=18;y>0;y--){
@@ -214,7 +219,7 @@ class Tank {
 					int fy = y * 16;
 					int w = 32;
 					int h = 32;
-					if(Math.abs((fx + 8) - (tx + 16)) < w/2 + 4 //横の判定
+					if(Math.abs((fx + 8) - (tx + 16)) < w/2 + 8 //横の判定
 					   &&
 					   Math.abs((fy + 8) - (ty + 16)) < h/2 + 4 //縦の判定
 					) {
@@ -226,6 +231,7 @@ class Tank {
 	}
 	public double tx;
 	public double ty;
+	public int stop;
 }
 class OriginalRandom {
 	private static final double M = 65536;
@@ -276,6 +282,7 @@ class MainPanel extends JPanel implements Runnable {
     final int OPT_MAX = 2;
     final int ENEMY_MAX = 8;
     final int BULLET_RATE = 300;
+    final int TANK_BULLET = 100;
 
     public void gameStart() {
 	fmove = false;
@@ -395,7 +402,11 @@ class MainPanel extends JPanel implements Runnable {
 			em[i].ex = rnd.nextInt(200) + 400;
 			em[i].ey = rnd.nextInt(320 - 128) + 64;
 		}
-		ta.tx = -96;
+	    }
+	    if(sx % 780 == 0){	// 戦車（カメ）発生
+		if(ta.tx > 400) {
+			ta.tx = -96;
+		}
 	    }
 	    try {
 		for(int i=0; i<FRAME_INTERVAL; i++){
@@ -466,7 +477,10 @@ class MainPanel extends JPanel implements Runnable {
 	}
 	// 戦車（カメ）の移動
 	ta.moveTank(sm,sx);
-	if(ta.tx < 400 && rnd.nextInt(BULLET_RATE) == 0) {
+	if(ta.stop ==0 && 32 < ta.tx && ta.tx < 400 && rnd.nextInt(TANK_BULLET) == 0) {
+		ta.stop = 60;
+	}
+	if(ta.stop == 30) {
 		ef[eff].setFire(mx,my,(int)ta.tx,(int)ta.ty,3);
 		eff++;
 		if(eff == FIRE_MAX) eff = 0;
@@ -537,10 +551,14 @@ class MainPanel extends JPanel implements Runnable {
 	dstY1 = ta.ty * panelHeight / 320;
 	dstY2 = dstY1 + 32 * panelHeight / 320;
 	boolean td = true;
-	if(mx < ta.tx) {
-		td = false;
+	int tank_anime = a;
+	if(ta.stop > 0) {
+		tank_anime = 0;
+		if( mx < ta.tx) {
+			td = false;
+		}
 	}
-	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,0+a,6,td,false);
+	buffCopy(g2D, (int)dstX1,(int)dstY1,(int)dstX2,(int)dstY2,0+tank_anime,6,td,false);
     }
 };
 
