@@ -184,7 +184,7 @@ class Enemy {
 		return false;
 	}
 	public void moveEnemy(){
-		ex = ex - 2;
+		ex = ex - 3;
 		ey = y_center + Math.cos(ex / 32) * 32;
 	}
 	double ex;
@@ -198,7 +198,7 @@ class Tank {
 	}
 	public void moveTank(StageMap sm, int sx){
 		if(stop > 0) {
-			tx = tx - 3;
+			tx = tx - 1;
 			stop--;
 		} else {
 			tx = tx + 2;
@@ -277,7 +277,7 @@ class MainPanel extends JPanel implements Runnable {
     private long gtimer; //フレーム進行タイマー	
     
     final int FRAME_INTERVAL = 16;
-    final int SCROLL_SPEED = 3;
+    final int SCROLL_SPEED = 1;
     final int FIRE_MAX = 1024;
     final int OPT_MAX = 2;
     final int ENEMY_MAX = 8;
@@ -397,13 +397,13 @@ class MainPanel extends JPanel implements Runnable {
 	    moveCommand();
 	    repaint();
 	    sx = sx + SCROLL_SPEED; // スクロール
-	    if(sx % 900 == 0){	// 敵発生
+	    if(sx % (300 * SCROLL_SPEED ) == 0){ // 敵発生
 		for( int i = 0; i < ENEMY_MAX; i++){
 			em[i].ex = rnd.nextInt(200) + 400;
 			em[i].ey = rnd.nextInt(320 - 128) + 64;
 		}
 	    }
-	    if(sx % 780 == 0){	// 戦車（カメ）発生
+	    if(sx % ( 260 * SCROLL_SPEED ) == 0){ // 戦車（カメ）発生
 		if(ta.tx > 400) {
 			ta.tx = -96;
 		}
