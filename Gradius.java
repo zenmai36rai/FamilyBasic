@@ -204,7 +204,7 @@ class Tank {
 				int a = sm.map[y*sm.MAP_WIDTH+cx];
 				// マップチップがブロックなら交差判定
 				if(a == 5 || a == 6){
-					int fx = x * 16;
+					int fx = x * 16 - (sx % 16);;
 					int fy = y * 16;
 					int w = 32;
 					int h = 32;
@@ -433,16 +433,20 @@ class MainPanel extends JPanel implements Runnable {
 	fmove = false;
 	if(key_left == 1) {
 		mx = mx -4;
+		if(mx < 0){ mx = 0; }
 		fmove = true;
 	} else if(key_right == 1) {
 		mx = mx + 4;
+		if(mx > 400-32){ mx = 400-32; }
 		fmove = true;
 	}
 	if(key_up == 1) {
 		my = my - 4;
+		if(my < 16) { my = 16; }
 		fmove = true;
 	} else if(key_down == 1) {
 		my = my + 4;
+		if(my > 320-64){ my = 320-64; }
 		fmove = true;
 	}
 	// 敵の移動
