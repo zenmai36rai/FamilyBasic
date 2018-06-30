@@ -33,7 +33,7 @@ class DrawPanel extends JPanel implements Runnable {
         t = 0;
 	while( true ) {
             try {
-                Thread.sleep(10);
+                Thread.sleep(5);
             } catch(InterruptedException e){
                 e.printStackTrace();
             }
@@ -62,8 +62,8 @@ class DrawPanel extends JPanel implements Runnable {
         for( int z = 200; z > -200; z -= 10){
             for( int x = -200; x < 200; x++ ){
 	        int buff = x * x + z * z;
-		int h = 5 - (t % 30) / 10;
-                y = (int)(30 * (Math.cos(Math.sqrt(buff) * Rd) + Math.cos(h * Math.sqrt(buff) * Rd)));
+		double h = 3 * Math.cos(t / 10 * Rd);
+                y = (int)(30 * Math.cos(h * Math.sqrt(buff) * Rd));
                 px = (int)(320 + x * Math.cos(-30 * Rd) + z * Math.sin(-30 * Rd));
                 py = (int)(200 - (y * Math.cos(30 * Rd) - (-x * Math.sin(-30 * Rd) + z * Math.cos(-30 * Rd)) * Math.sin(30 * Rd)));
                 if( py < ymin[px] ){
